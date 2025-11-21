@@ -4,7 +4,7 @@ set -exv
 
 # add other variables and overrides
 REGISTRY=${TEST_REGISTRY:-localhost:5000}
-FLAGS=""
+FLAGS="--remove-signatures=true"
 
 if [ "${REGISTRY}" == "localhost:5000" ];
 then
@@ -27,7 +27,7 @@ all_happy_path () {
   echo -e "registry PID ${PID}"
 
   # mirror-to-disk
-  oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2 
+  oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2 ${FLAGS} 
   # echo -e "exit => $?"
 
   # this creates an error regarding graph data - need to investigate it
