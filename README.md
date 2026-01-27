@@ -79,7 +79,7 @@ podman images
 # - credentials ~/.docker
 # - images (for host disk)
 mkdir working-dir
-podman run -it --net=host -v /home/lzuccarelli/.docker/:/root/.docker -v ./working-dir/:/artifacts/workingdir a3e3773b0627  bash
+podman run -it --net=host -v /home/${USER}/.docker/:/root/.docker -v ./working-dir/:/artifacts/workingdir a3e3773b0627  bash
 
 # do a mirror to disk
 oc-mirror --config isc/isc-happy-path.yaml file://workingdir --v2 --remove-signatures
@@ -93,7 +93,7 @@ To execute a flow use the following command
 
 ```bash
 # mount the scripts folder for easier debugging
-podman run -it --net=host -v /home/lzuccarelli/.docker/:/root/.docker -v ./images/:/artifacts/workingdir -v ./scripts/:/artfifacts/scripts a3e3773b0627  bash
+podman run -it --net=host -v /home/${USER}/.docker/:/root/.docker -v ./images/:/artifacts/workingdir -v ./scripts/:/artfifacts/scripts a3e3773b0627  bash
 # this will do a a mirror-to-disk and disk-to-mirror
 # also assumes you have an external registry (localhost:5000) running
 ./scripts/flow-controller.sh all_happy_path
@@ -101,35 +101,30 @@ podman run -it --net=host -v /home/lzuccarelli/.docker/:/root/.docker -v ./image
 
 ### Release signature signing and verification
 
-This step has been included and updated in the current artifacts image
+This step has been included and updated in the current artifacts image.
 
-This is just for information sake in case there are changes needed to the test-release-index or test-image on quay.io
+This is just for information sake in case there are changes needed to the test-release-index or test-image on quay.io.
 
-Create a simple gpg robot account
+You will also need to follow the next steps if you want to run these tests locally, as oc-mirror verifies the GPG signature on OpenShift releases.
 
-Execute the following command and create a "fake" account
+First, execute the following command to create a "fake" GPG robot account. Use default settings and when prompted use an email like `robot@test.com`:
 
 ```
 # use something like robot@test.com for an email address
 gpg2 -a --full-generate-key 
 ```
 
-As we have a fixed naming convention for our release image we can now sign it 
+As we have a fixed naming convention for our release image we can now sign it.
 
-Create the relevant directories (if needed)
+To do so, you can navigate to [quay.io](quay.io) and create a robot account (Account Settings > Robot Accounts). 
+Once created, click on it and copy and execute the `Podman Login` command, appending `--authfile ~/.docker/robot-quay.json`.
 
-To be able to push and pull images from quay.io navigate to the web console and got to robot account 
-
-Click on  "oc-mirror+cicd"
-
-Click on Podman Login and execute that command locally (uppend to the command --authfile ~/.docker/robot-quay.json)
-
-
+Once the authfile is created, proceed to create the sigstore and keys directories and sign the image:
 ```
 mkdir ./sigstore
 mkdir ./keys
 
-podman image sign  docker://quay.io/oc-mirror/release/test-release-index:v0.0.1 --sign-by robot@test.com --directory ./sigstore --authfile /home/lzuccarelli/.docker/robot-quay.json --log-level=trace
+podman image sign  docker://quay.io/oc-mirror/release/test-release-index:v0.0.1 --sign-by robot@test.com --directory ./sigstore --authfile /home/${USER}/.docker/robot-quay.json --log-level=trace
 ```
 
 
@@ -140,9 +135,6 @@ gpg -a --output ./keys/release-pk.asc --export-secret-key robot@test.com
 ```
 
 Finally copy the sigstore public key to keys
-
-i.e. as an example
-
 ```
 cp sigstore/oc-mirror/release/test-release-index\@sha256\=f81792339c8b5934191d18a53b18bc1d584e01a9f37d59c0aa6905b00200aa1b/signature-1 keys/v0.0.1-f81792339c8b5934191d18a53b18bc1d584e01a9f37d59c0aa6905b00200aa1b
 ```

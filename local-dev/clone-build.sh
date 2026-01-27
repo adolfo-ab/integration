@@ -27,22 +27,21 @@ then
   git checkout ${BRANCH}
 fi
 
-# cd to v2
-cd v2
+pushd v2 || true
 
 # copy all the relevant directories
 rm -rf Makefile
 rm -rf containerfile-rhel9-dev
 rm -rf scripts/
 rm -rf isc/
-cp ../../Makefile .
-cp ../../containerfile-rhel9-dev .
-cp ../../uid_entrypoint.sh .
-cp -r ../../scripts .
-cp -r ../../isc .
-cp ../../registry-config.yaml .
-cp ../../registry .
-cp -r ../../keys .
+cp ../Makefile .
+cp ../containerfile-rhel9-dev .
+cp ../uid_entrypoint.sh .
+cp -r ../scripts .
+cp -r ../isc .
+cp ../registry-config.yaml .
+cp ../registry .
+cp -r ../keys .
 
 make container
 
