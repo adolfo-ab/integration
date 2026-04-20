@@ -1,20 +1,24 @@
-PYTHON := python3
-PUBLISH_FLAGS :=
+REGISTRY ?= quay.io/oc-mirror/oc-mirror-dev
+RUNTIME ?= podman
+OUTPUT = _output
 
-all: publish
+all: build
 .PHONY: all
 
-.venv/bin/pip:
-	@echo "Creating virtual environment" >&2
-	@$(PYTHON) -m venv .venv
-	@.venv/bin/pip install --upgrade pip setuptools wheel
+build:
+	go run ./cmd/build-catalogs
+.PHONY: build
 
-.requirements: .venv/bin/pip requirements.txt
-	@echo "Installing requirements" >&2
-	@.venv/bin/pip install -r requirements.txt
-	@touch .requirements
+push: build
+	@for dir in $(OUTPUT)/test-catalog-*/; do \
+		name=$$(basename "$$dir"); \
+		echo "Building $$name"; \
+		$(RUNTIME) build --format=docker -t "$(REGISTRY):$$name" \
+			-f "$(OUTPUT)/$$name.Dockerfile" $(OUTPUT); \
+		$(RUNTIME) push --format=docker "$(REGISTRY):$$name"; \
+	done
+.PHONY: push
 
-publish: .requirements publish_images.py
-	@echo "Rendering and publishing images" >&2
-	@.venv/bin/python publish_images.py $(PUBLISH_FLAGS)
-.PHONY: publish
+clean:
+	rm -rf $(OUTPUT)
+.PHONY: clean

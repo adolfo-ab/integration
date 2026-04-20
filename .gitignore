@@ -6,3 +6,4 @@ release-payload/
 .idea/
 bin/
 logs/
+images/operator/_output/
